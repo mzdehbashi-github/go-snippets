@@ -1,0 +1,38 @@
+digraph G {
+    subgraph cluster_files {
+        label = "Files";
+
+        readFromFile1 -> parseToArray1 [label="textChannel"];
+        parseToArray1 -> extractWindDirection1 [label="metarChannel"];
+        extractWindDirection1 -> windsChannel [label="windsChannel"];
+
+        readFromFile2 -> parseToArray2 [label="textChannel"];
+        parseToArray2 -> extractWindDirection2 [label="metarChannel"];
+        extractWindDirection2 -> windsChannel [label="windsChannel"];
+
+        readFromFile3 -> parseToArray3 [label="textChannel"];
+        parseToArray3 -> extractWindDirection3 [label="metarChannel"];
+        extractWindDirection3 -> windsChannel [label="windsChannel"];
+
+        readFromFile4 -> parseToArray4 [label="textChannel"];
+        parseToArray4 -> extractWindDirection4 [label="metarChannel"];
+        extractWindDirection4 -> windsChannel [label="windsChannel"];
+    }
+
+    windsChannel -> mineWindDistribution -> ResultsChannel;
+
+    ResultsChannel [label="Results Channel" shape=parallelogram];
+    windsChannel [label="windsChannel" shape=trapezium];
+    readFromFile1 [label="readFromFile"];
+    readFromFile2 [label="readFromFile"];
+    readFromFile3 [label="readFromFile"];
+    readFromFile4 [label="readFromFile"];
+    parseToArray1 [label="parseToArray"];
+    parseToArray2 [label="parseToArray"];
+    parseToArray3 [label="parseToArray"];
+    parseToArray4 [label="parseToArray"];
+    extractWindDirection1 [label="extractWindDirection"];
+    extractWindDirection2 [label="extractWindDirection"];
+    extractWindDirection3 [label="extractWindDirection"];
+    extractWindDirection4 [label="extractWindDirection"];
+}

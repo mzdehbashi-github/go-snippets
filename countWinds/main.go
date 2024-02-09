@@ -75,12 +75,21 @@ func extractWindDirection(metarChannel <-chan []string, windsChannel chan<- []st
 	}
 }
 
-// mineWindDistribution calculates wind direction distribution.
-func mineWindDistribution(windsChannel <-chan []string, distChannel chan<- [8]int, filLen int) {
-	// We can not use range, to read from channel, because it is never gets closed.
-	// but it is easy to know how many times, we should read from this channel, according to
-	// the number of files.
-	for i := 0; i < filLen; i++ {
+// readFromFile reads content from files and sends it to a text channel.
+func readFromFile(absPath string, file os.DirEntry, textChannel chan<- string) {
+	dat, err := os.ReadFile(filepath.Join(absPath, file.Name()))
+	if err != nil {
+		panic(err)
+	}
+	text := string(dat)
+	textChannel <- text
+}
+
+// Calculate wind direction distribution, by reading from `windsChannel`
+// and updating `windDist` array. Eventually `windDist` would contain wind distributions
+// for all directions.
+func aggWindDistibution(fileCount int, windsChannel <-chan []string) {
+	for i := 0; i < fileCount; i++ {
 		winds := <-windsChannel
 		for _, wind := range winds {
 			if variableWind.MatchString(wind) {
@@ -96,17 +105,6 @@ func mineWindDistribution(windsChannel <-chan []string, distChannel chan<- [8]in
 			}
 		}
 	}
-	distChannel <- windDist
-}
-
-// readFromFile reads content from files and sends it to a text channel.
-func readFromFile(absPath string, file os.DirEntry, textChannel chan<- string) {
-	dat, err := os.ReadFile(filepath.Join(absPath, file.Name()))
-	if err != nil {
-		panic(err)
-	}
-	text := string(dat)
-	textChannel <- text
 }
 
 func main() {
@@ -115,14 +113,13 @@ func main() {
 	// Read the list of files in the directory
 	files, _ := os.ReadDir(absPath)
 	// Determine the number of files
-	fileLen := len(files)
+	fileCount := len(files)
 	start := time.Now()
 
 	// Channels for communication between goroutines
-	textChannel := make(chan string, fileLen)
-	metarChannel := make(chan []string, fileLen)
-	windsChannel := make(chan []string, fileLen)
-	resultsChannel := make(chan [8]int)
+	textChannel := make(chan string, fileCount)
+	metarChannel := make(chan []string, fileCount)
+	windsChannel := make(chan []string, fileCount)
 
 	// Launch goroutines for reading files, parsing METAR reports, and extracting wind direction
 	for _, file := range files {
@@ -131,14 +128,13 @@ func main() {
 		go extractWindDirection(metarChannel, windsChannel)
 	}
 
-	// Launch goroutine to calculate wind direction distribution
-	go mineWindDistribution(windsChannel, resultsChannel, fileLen)
+	// Eventually wait for the output from `windsChannel`,
+	// to aggregate wind distributions for all directions.
+	aggWindDistibution(fileCount, windsChannel)
 
-	// Retrieve wind distribution results
-	results := <-resultsChannel
 	elapsed := time.Since(start)
 
 	// Print results and processing time
-	fmt.Printf("%v\n", results)
+	fmt.Printf("%v\n", windDist)
 	fmt.Printf("Processing took %s\n", elapsed)
 }

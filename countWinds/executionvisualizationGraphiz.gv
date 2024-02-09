@@ -19,9 +19,8 @@ digraph G {
         extractWindDirection4 -> windsChannel [label="windsChannel"];
     }
 
-    windsChannel -> mineWindDistribution -> ResultsChannel;
+    windsChannel -> aggWindDistibution -> windDist;
 
-    ResultsChannel [label="Results Channel" shape=parallelogram];
     windsChannel [label="windsChannel" shape=trapezium];
     readFromFile1 [label="readFromFile"];
     readFromFile2 [label="readFromFile"];
